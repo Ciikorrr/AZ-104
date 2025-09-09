@@ -12,7 +12,7 @@
 
 ### Génération de votre paire de clés
 
-```
+```bash
 └─$ cd ~/.ssh
 └─$ ssh-keygen -t ed25519 -f cloud_tp1
 Generating public/private ed25519 key pair.
@@ -38,7 +38,7 @@ The key's randomart image is:
 
 ### Configurer un agent SSH sur votre poste
 
-```
+```bash
 eval "$(ssh-agent -s)" > /dev/null
 ssh-add ~/.ssh/cloud_tp1
 Enter passphrase for cloud_tp1:
@@ -51,7 +51,7 @@ ssh-add -l
 
 ### Connectez-vous en SSH à la VM pour preuve
 
-```
+```bash
 └─$ ssh azureuser@20.117.208.30
 The authenticity of host '20.117.208.30 (20.117.208.30)' can't be established.
 ED25519 key fingerprint is SHA256:Tz2QVeztw2QB32DIba5/Jyp+rmVPwxsuyJqj4cqbuWs.
@@ -65,7 +65,7 @@ azureuser@ciikorrr:~$
 
 ### Créez une VM depuis le Azure CLI
 
-```
+```bash
 └─$ az vm create -g Cloud_Computing -n TP1_test --image Ubuntu2404 --admin-username azureciikorrr --ssh-key-values ~/.ssh/cloud_tp1.pub --size Standard_B1s
 {
   "fqdns": "",
@@ -82,7 +82,7 @@ azureuser@ciikorrr:~$
 
 ### Assurez-vous que vous pouvez vous connecter à la VM en SSH sur son IP publique
 
-```
+```bash
 ssh azureciikorrr@172.166.165.213
 The authenticity of host '172.166.165.213 (172.166.165.213)' can't be established.
 ED25519 key fingerprint is SHA256:l9g9jJguPk4cgIn7/LEGL4/RfiWxxkXQ/tj4l7BOtaY.
@@ -97,20 +97,20 @@ azureciikorrr@TP1test:~$
 ### Une fois connecté, prouvez la présence...
 - ...du service walinuxagent.service
 
-```
+```bash
 azureciikorrr@TP1test:~$ systemctl list-units --type=service | grep walinuxagent
   walinuxagent.service                                  loaded active running Azure Linux Agent
 ```
 - ...du service cloud-init.service
 
-```
+```bash
 azureciikorrr@TP1test:~$ systemctl list-units --type=service | grep cloud-init.service
   cloud-init.service                                    loaded active exited  Cloud-init: Network Stage
 ```
 
 ## 3 Prerequis Terraform
 
-```
+```bash
 └─$ terraform init
 
 Initializing the backend...
@@ -134,7 +134,7 @@ rerun this command to reinitialize your working directory. If you forget, other
 commands will detect it and remind you to do so if necessary.
 ```
 
-```
+```bash
 └─$ terraform plan
 
 
@@ -286,7 +286,7 @@ Note: You didn't use the -out option to save this plan, so Terraform can't guara
 
 ### Prouvez avec une connexion SSH sur l'IP publique que la VM est up
 
-```
+```bash
 └─$ ssh ciikorrr@4.234.216.30 -i ~/.ssh/cloud_tp1
 Welcome to Ubuntu 24.04.3 LTS (GNU/Linux 6.11.0-1018-azure x86_64)
 ...
