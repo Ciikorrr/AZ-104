@@ -31,7 +31,7 @@ resource "azurerm_network_interface_security_group_association" "nsg_assoc" {
 
 ### Prouver que ça fonctionne, rendu attendu
 
-```json
+```bash
 └─$ az vm show   --resource-group MyRessourceGroup \ 
   --name terraform-ciikorrr \
   --query "networkProfile.networkInterfaces[].id" \
@@ -39,6 +39,8 @@ resource "azurerm_network_interface_security_group_association" "nsg_assoc" {
 /subscriptions/[SUBSCRIPTION_ID]/resourceGroups/myRessourceGroup/providers/Microsoft.Network/networkInterfaces/vm-nic
 ┌──(M.M㉿fedora)-[~/Efrei/CloudComputing/Terraform]
 └─$ az network nic show --ids /subscriptions/[SUBSCRIPTION_ID]/resourceGroups/myRessourceGroup/providers/Microsoft.Network/networkInterfaces/vm-nic -o json
+```
+```json
 {
   "auxiliaryMode": "None",
   "auxiliarySku": "None",
@@ -430,8 +432,10 @@ keyvault.tf
 
 #### Avec une commande `az`, afficher le secret
 
-```json
+```bash
 └─$ az keyvault secret show --name ciikorrrSecret --vault-name CiikorrrVaultKey
+```
+```json
 {
   "attributes": {
     "created": "2025-09-12T11:37:57+00:00",
