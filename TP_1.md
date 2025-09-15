@@ -287,7 +287,7 @@ Note: You didn't use the -out option to save this plan, so Terraform can't guara
 ### Prouvez avec une connexion SSH sur l'IP publique que la VM est up
 
 ```bash
-└─$ ssh ciikorrr@4.234.216.30 -i ~/.ssh/cloud_tp1
+└─$ ssh ciikorrr@4.234.216.30
 Welcome to Ubuntu 24.04.3 LTS (GNU/Linux 6.11.0-1018-azure x86_64)
 ...
 ciikorrr@terraform-ciikorrr:~$

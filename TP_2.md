@@ -100,7 +100,7 @@ resource "azurerm_network_interface_security_group_association" "nsg_assoc" {
 }
 ```
 ```bash
-└─$ ssh ciikorrr@myvm123.uksouth.cloudapp.azure.com -i ~/.ssh/cloud_tp1
+└─$ ssh ciikorrr@myvm123.uksouth.cloudapp.azure.com
 Welcome to Ubuntu 20.04.6 LTS (GNU/Linux 5.15.0-1089-azure x86_64)
 
  * Documentation:  https://help.ubuntu.com
@@ -154,7 +154,7 @@ Sep 12 12:06:24 terraform-ciikorrr sshd[22559]: Server listening on :: port 2222
 Sep 12 12:06:24 terraform-ciikorrr systemd[1]: Started OpenBSD Secure Shell server.
 ```
 ```bash
-└─$ ssh ciikorrr@20.68.218.111 -i ~/.ssh/cloud_tp1 -p 2222
+└─$ ssh ciikorrr@20.68.218.111 -p 2222
 ssh: connect to host 20.68.218.111 port 2222: Connection timed out
 ```
 
