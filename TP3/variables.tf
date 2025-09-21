@@ -25,32 +25,32 @@ variable "subscription_id" {
   description = "Azure subscription ID"
 }
 
-# variable "storage_account_name" {
-#   type        = string
-#   description = "Azure Name Account"
-# }
+variable "storage_account_name" {
+  type        = string
+  description = "Azure Name Account"
+}
 
-# variable "container_name" {
-#   type        = string
-#   description = "Azure Name Container"
-# }
+variable "container_name" {
+  type        = string
+  description = "Azure Name Container"
+}
 
 variable "public_IP" {
   type        = string
   description = "Public IP address"
 }
 
-# variable "alert_email_address" {
-#   type        = string
-#   description = "Alert Email Address"
-# }
+variable "alert_email_address" {
+  type        = string
+  description = "Alert Email Address"
+}
 
-# variable "vault_name" {
-#   type = string
-#   description = "Vault Name"
-# }
+variable "domaine_name" {
+  type        = string
+  description = "Domaine name"
+}
 
-# variable "secret_name" {
-#   type = string
-#   description = "Secret Name"
-# }
+variable "vault_name" {
+  type = string
+  description = "Vault Name"
+}

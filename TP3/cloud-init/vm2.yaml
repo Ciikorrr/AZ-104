@@ -1,0 +1,422 @@
+#cloud-config
+users:
+  - name: ciikorrr
+    group: wheel
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh-authorized-keys:
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIx77OCib7Hs85f2S8g1hT6KHB6HdB44X5g3lYvsuvbV M.M@fedora"
+
+package_update: true
+packages:
+  - nginx
+  - firewalld
+
+write_files:
+  - path: /var/www/index.html
+    content: |
+      <html><body><h1>Hello depuis le backend !</h1></body></html>
+
+  - path: /etc/ssh/sshd_config
+    content: |
+      #       $OpenBSD: sshd_config,v 1.103 2018/04/09 20:41:22 tj Exp $
+      
+      # This is the sshd server system-wide configuration file.  See
+      # sshd_config(5) for more information.
+      
+      # This sshd was compiled with PATH=/usr/bin:/bin:/usr/sbin:/sbin
+      
+      # The strategy used for options in the default sshd_config shipped with
+      # OpenSSH is to specify options with their default value where
+      # possible, but leave them commented.  Uncommented options override the
+      # default value.
+      
+      Include /etc/ssh/sshd_config.d/*.conf
+      
+      Port 22
+      #AddressFamily any
+      #ListenAddress 0.0.0.0
+      #ListenAddress ::
+      
+      #HostKey /etc/ssh/ssh_host_rsa_key
+      #HostKey /etc/ssh/ssh_host_ecdsa_key
+      #HostKey /etc/ssh/ssh_host_ed25519_key
+      
+      # Ciphers and keying
+      #RekeyLimit default none
+      
+      # Logging
+      #SyslogFacility AUTH
+      #LogLevel INFO
+      
+      # Authentication:
+      
+      LoginGraceTime 30
+      PermitRootLogin no
+      #StrictModes yes
+      MaxAuthTries 3
+      #MaxSessions 10
+      
+      PubkeyAuthentication yes
+      
+      AllowUsers ciikorrr
+      
+      # Expect .ssh/authorized_keys2 to be disregarded by default in future.
+      #AuthorizedKeysFile     .ssh/authorized_keys .ssh/authorized_keys2
+      
+      #AuthorizedPrincipalsFile none
+      
+      #AuthorizedKeysCommand none
+      #AuthorizedKeysCommandUser nobody
+      
+      # For this to work you will also need host keys in /etc/ssh/ssh_known_hosts
+      #HostbasedAuthentication no
+      # Change to yes if you don't trust ~/.ssh/known_hosts for
+      # HostbasedAuthentication
+      #IgnoreUserKnownHosts no
+      # Don't read the user's ~/.rhosts and ~/.shosts files
+      #IgnoreRhosts yes
+      
+      # To disable tunneled clear text passwords, change to no here!
+      PasswordAuthentication no
+      #PermitEmptyPasswords no
+      
+      # Change to yes to enable challenge-response passwords (beware issues with
+      # some PAM modules and threads)
+      ChallengeResponseAuthentication no
+      
+      # Kerberos options
+      #KerberosAuthentication no
+      #KerberosOrLocalPasswd yes
+      #KerberosTicketCleanup yes
+      #KerberosGetAFSToken no
+      
+      # GSSAPI options
+      #GSSAPIAuthentication no
+      #GSSAPICleanupCredentials yes
+      #GSSAPIStrictAcceptorCheck yes
+      #GSSAPIKeyExchange no
+      
+      # Set this to 'yes' to enable PAM authentication, account processing,
+      # and session processing. If this is enabled, PAM authentication will
+      # be allowed through the ChallengeResponseAuthentication and
+      # PasswordAuthentication.  Depending on your PAM configuration,
+      # PAM authentication via ChallengeResponseAuthentication may bypass
+      # the setting of "PermitRootLogin without-password".
+      # If you just want the PAM account and session checks to run without
+      # PAM authentication, then enable this but set PasswordAuthentication
+      # and ChallengeResponseAuthentication to 'no'.
+      UsePAM yes
+      
+      AllowAgentForwarding yes
+      #AllowTcpForwarding yes
+      #GatewayPorts no
+      X11Forwarding no
+      #X11DisplayOffset 10
+      #X11UseLocalhost yes
+      #PermitTTY yes
+      PrintMotd no
+      #PrintLastLog yes
+      #TCPKeepAlive yes
+      #PermitUserEnvironment no
+      #Compression delayed
+      #ClientAliveInterval 0
+      #ClientAliveCountMax 3
+      #UseDNS no
+      #PidFile /var/run/sshd.pid
+      #MaxStartups 10:30:100
+      #PermitTunnel no
+      #ChrootDirectory none
+      #VersionAddendum none
+      
+      # no default banner path
+      #Banner none
+      
+      # Allow client to pass locale environment variables
+      AcceptEnv LANG LC_*
+      
+      # override default of no subsystems
+      Subsystem       sftp    /usr/lib/openssh/sftp-server
+      
+      # Example of overriding settings on a per-user basis
+      #Match User anoncvs
+      #       X11Forwarding no
+      #       AllowTcpForwarding no
+      #       PermitTTY no
+      #       ForceCommand cvs server
+
+  - path: /etc/pam.d/su
+    content: |
+      #
+      # The PAM configuration file for the Shadow `su' service
+      #
+
+      # This allows root to su without passwords (normal operation)
+      auth       sufficient pam_rootok.so
+
+      # Uncomment this to force users to be a member of group root
+      # before they can use `su'. You can also add "group=foo"
+      # to the end of this line if you want to use a group other
+      # than the default "root" (but this may have side effect of
+      # denying "root" user, unless she's a member of "foo" or explicitly
+      # permitted earlier by e.g. "sufficient pam_rootok.so").
+      # (Replaces the `SU_WHEEL_ONLY' option from login.defs)
+      auth       required   pam_wheel.so use_uid
+
+      # Uncomment this if you want wheel members to be able to
+      # su without a password.
+      # auth       sufficient pam_wheel.so trust
+
+      # Uncomment this if you want members of a specific group to not
+      # be allowed to use su at all.
+      # auth       required   pam_wheel.so deny group=nosu
+
+      # Uncomment and edit /etc/security/time.conf if you need to set
+      # time restrainst on su usage.
+      # (Replaces the `PORTTIME_CHECKS_ENAB' option from login.defs
+      # as well as /etc/porttime)
+      # account    requisite  pam_time.so
+
+      # This module parses environment configuration file(s)
+      # and also allows you to use an extended config
+      # file /etc/security/pam_env.conf.
+      # 
+      # parsing /etc/environment needs "readenv=1"
+      session       required   pam_env.so readenv=1
+      # locale variables are also kept into /etc/default/locale in etch
+      # reading this file *in addition to /etc/environment* does not hurt
+      session       required   pam_env.so readenv=1 envfile=/etc/default/locale
+
+      # Defines the MAIL environment variable
+      # However, userdel also needs MAIL_DIR and MAIL_FILE variables
+      # in /etc/login.defs to make sure that removing a user 
+      # also removes the user's mail spool file.
+      # See comments in /etc/login.defs
+      #
+      # "nopen" stands to avoid reporting new mail when su'ing to another user
+      session    optional   pam_mail.so nopen
+
+      # Sets up user limits according to /etc/security/limits.conf
+      # (Replaces the use of /etc/limits in old login)
+      session    required   pam_limits.so
+
+      # The standard Unix authentication modules, used with
+      # NIS (man nsswitch) as well as normal /etc/passwd and
+      # /etc/shadow entries.
+      @include common-auth
+      @include common-account
+      @include common-session
+
+  - path: /tmp/firewall_script.sh
+    content: |
+      #!/bin/bash
+      echo "# Create new zone"
+      sudo firewall-cmd --permanent --new-zone=local
+      echo "# Change interface to eth0"
+      sudo firewall-cmd --permanent --zone=local --change-interface=eth0
+      echo "# Add port 22/tcp"
+      sudo firewall-cmd --permanent --zone=local --add-port=22/tcp
+      echo "# Add port 80/tcp"
+      sudo firewall-cmd --permanent --zone=local --add-port=80/tcp
+      echo "# Add port 19999/tcp"
+      sudo firewall-cmd --permanent --zone=local --add-port=19999/tcp
+      echo "# Relaod"
+      sudo firewall-cmd --reload
+      echo "# Get Active Zone"
+      sudo firewall-cmd --get-active-zones
+      echo "# Get infos"
+      sudo firewall-cmd --list-all --zone=local
+
+  - path: /etc/netdata/health_alarm_notify.conf
+    content: |
+      # Activer Discord
+      SEND_DISCORD="YES"
+      
+      # URL de votre webhook
+      DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/1417485549408878612/h80lfuhcLKRWiME7lO0rn2J0cwJ2p2S9vgPp-tr1FIGDGa8ODfhOrXiStBmKDLUvkPqa"
+      
+      # Par défaut, envoyez tout à ce webhook
+      DEFAULT_RECIPIENT_DISCORD="alarms"
+
+  - path: /etc/netdata/health.d/cpu_alert.conf
+    content: |
+      alarm: my_cpu_usage_high
+      type: System
+      class: Utilization
+      component: CPU
+      on: system.cpu
+      lookup: average -1m of all
+      units: %
+      every: 10s
+      warn: $this > 80
+      crit: $this > 90
+      info: "CPU usage too high"
+      to: discord:alarms
+
+  - path: /etc/netdata/health.d/ram_alert.conf
+    content: |
+      alarm: my_ram_alert
+      on: system.ram
+      class: Utilization
+      type: System
+      component: Memory
+      host labels: _os=linux
+             calc: $used * 100 / ($used + $cached + $free + $buffers)
+            units: %
+            every: 10s
+             warn: $this > (($status >= $WARNING)  ? (80) : (90))
+             crit: $this > (($status == $CRITICAL) ? (90) : (98))
+            delay: down 15m multiplier 1.5 max 1h
+          summary: System memory utilization
+             info: System memory utilization
+               to: discord:alarms
+
+  - path: /etc/netdata/health.d/disk_alert.conf
+    content: |
+      template: my_disk_space_usage
+      on: disk.space
+      class: Utilization
+      type: System
+      component: Disk
+      chart labels: mount_point=!/dev !/dev/* !/run !/run/* !HarddiskVolume* *
+      calc: $used * 100 / ($avail + $used)
+      units: %
+      every: 1m
+      warn: $this > (($status >= $WARNING ) ? (80) : (90))
+      crit: ($this > (($status == $CRITICAL) ? (90) : (98))) && $avail < 5
+      delay: up 1m down 15m multiplier 1.5 max 1h
+      summary: Disk ${label:mount_point} space usage
+      info: Total space utilization of disk ${label:mount_point}
+      to: discord:alarms
+
+      template: my_10min_disk_utilization
+      on: disk.util
+      class: Utilization
+      type: System
+      component: Disk
+      lookup: average -10m unaligned
+      units: %
+      every: 1m
+      warn: $this > 98 * (($status >= $WARNING)  ? (0.7) : (1))
+      delay: down 15m multiplier 1.2 max 1h
+      summary: Disk ${label:device} utilization
+      info: Average percentage of time ${label:device} disk was busy over the last 10 minutes
+      to: discord:alarms
+
+  - path: /etc/netdata/health.d/portcheck.conf
+    content: |
+      # This is a fast-reacting no-notification alarm ideal for custom dashboards or badges
+       template: portcheck_service_reachable
+             on: portcheck.status
+          class: Workload
+           type: Other
+      component: TCP endpoint
+         lookup: average -1m unaligned percentage of success
+          every: 5s
+           warn: $this < 50
+           crit: $this <= 10
+          units: up/down
+        summary: Portcheck status for ${label:host}:${label:port}
+           info: TCP host ${label:host} port ${label:port} liveness status
+             to: discord:alarms
+      
+       template: portcheck_connection_timeouts
+             on: portcheck.status
+          class: Errors
+           type: Other
+      component: TCP endpoint
+         lookup: average -5m unaligned percentage of timeout
+          every: 10s
+          units: %
+           warn: $this >= 10 AND $this < 40
+           crit: $this >= 40
+          delay: down 5m multiplier 1.5 max 1h
+        summary: Portcheck timeouts for ${label:host}:${label:port}
+           info: Percentage of timed-out TCP connections to host ${label:host} port ${label:port} in the last 5 minutes
+             to: discord:alarms
+      
+       template: portcheck_connection_fails
+             on: portcheck.status
+          class: Errors
+           type: Other
+      component: TCP endpoint
+         lookup: average -5m unaligned percentage of no_connection,failed
+          every: 10s
+          units: %
+           warn: $this >= 10 AND $this < 40
+           crit: $this >= 40
+          delay: down 5m multiplier 1.5 max 1h
+        summary: Portcheck fails for ${label:host}:${label:port}
+           info: Percentage of failed TCP connections to host ${label:host} port ${label:port} in the last 5 minutes
+             to: discord:alarms
+
+  - path: /etc/netdata/health.d/process_alert.conf
+    content: |
+      alarm: active_processes
+             on: system.active_processes
+          class: Workload
+           type: System
+      component: Processes
+           calc: $active * 100 / $pidmax
+          units: %
+          every: 5s
+           warn: $this > (($status >= $WARNING)  ? (85) : (90))
+           crit: $this > (($status == $CRITICAL) ? (90) : (95))
+          delay: down 5m multiplier 1.5 max 1h
+        summary: System PIDs utilization
+           info: System process IDs (PID) space utilization
+             to: discord:alarms
+  - path: /etc/netdata/go.d/portcheck.conf
+    content: | 
+      # Set the host and the port
+      jobs:
+        - name: tcp_check
+          host: 127.0.0.1
+          ports: [22, 80]
+
+  - path : /tmp/netdata_script.sh 
+    content: |
+      #!/bin/bash
+      echo "# Connect as netdata user"
+      sudo su -s /bin/bash netdata
+      echo "# Set ENV variable (NETDATA_ALARM_DEBUG)"
+      export NETDATA_ALARM_NOTIFY_DEBUG=1
+      echo "# Execute the test script"
+      /usr/libexec/netdata/plugins.d/alarm-notify.sh test
+
+  - path: /tmp/azcopy_install_script.sh
+    content: |
+      curl -sSL -O https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
+      sudo dpkg -i packages-microsoft-prod.deb
+      rm packages-microsoft-prod.deb
+      sudo apt-get update
+      sudo apt-get install azcopy
+      echo "# azcopy installation done with success"
+
+  - path: /tmp/azcopy_backup.sh
+    content: |
+      azcopy login --identity
+      azcopy copy "/etc/ssh/sshd_config" "https://ciikorrrstorage.blob.core.windows.net/mycontainer/sshd_config_bakcup"
+      azcopy copy "/tmp/azcopy_install_script.sh" "https://ciikorrrstorage.blob.core.windows.net/mycontainer/scripts/"
+      azcopy copy "/tmp/azcopy_backup.sh" "https://ciikorrrstorage.blob.core.windows.net/mycontainer/scripts/"
+      azcopy copy "/tmp/firewall_script.sh" "https://ciikorrrstorage.blob.core.windows.net/mycontainer/scripts/"
+      azcopy copy "/tmp/netdata_script.sh" "https://ciikorrrstorage.blob.core.windows.net/mycontainer/scripts/"
+      azcopy copy "https://ciikorrrstorage.blob.core.windows.net/mycontainer/sshd_config_bakcup" "/var/backups/sshd_config_backup"
+      azcopy copy "https://ciikorrrstorage.blob.core.windows.net/mycontainer/scripts/azcopy_install_script.sh" "/var/backups/azcopy_install_script.sh"
+      azcopy copy "https://ciikorrrstorage.blob.core.windows.net/mycontainer/scripts/azcopy_backup.sh" "/var/backups/azcopy_backup.sh"
+      azcopy copy "https://ciikorrrstorage.blob.core.windows.net/mycontainer/scripts/firewall_script.sh" "/var/backups/firewall_script.sh"
+      azcopy copy "https://ciikorrrstorage.blob.core.windows.net/mycontainer/scripts/netdata_script.sh" "/var/backups/netdata_script.sh"
+
+
+runcmd:
+  - systemctl enable nginx
+  - systemctl start nginx
+  - cd /tmp; chmod 700 azcopy_install_script.sh && sh azcopy_install_script.sh
+  - cd /tmp; chmod 700 azcopy_backup.sh
+  - echo "* * * * * root sh /tmp/azcopy_backup.sh" >> /etc/crontab
+  - chmod +r /var/backups/sshd_config_backup
+  - curl https://get.netdata.cloud/kickstart.sh > /tmp/netdata-kickstart.sh && cd /tmp && chmod 700 netdata-kickstart.sh && sh netdata-kickstart.sh
+  - cd /tmp ; sudo chmod 700 firewall_script.sh && sh firewall_script.sh
+  - systemctl restart netdata
+  - cd /tmp ; sudo chmod 700 netdata_script.sh && sh netdata_script.sh
+  - systemctl restart netdata

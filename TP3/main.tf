@@ -44,33 +44,7 @@ resource "azurerm_linux_virtual_machine" "myLinuxVirtualMachine_1" {
     type = "SystemAssigned"
   }
 
-  custom_data = base64encode(<<EOF
-#cloud-config
-users:
-  - name: ciikorrr
-    sudo: ALL=(ALL) NOPASSWD:ALL
-    shell: /bin/bash
-    ssh-authorized-keys:
-      - ${file("./ssh_keys/az_tp3.pub")}
-package_update: true
-packages:
-  - nginx
-write_files:
-  - path: /etc/nginx/sites-available/default
-    content: |
-      server {
-          listen 80;
-          location / {
-              proxy_pass http://${azurerm_network_interface.myNic_backend.private_ip_address};
-              proxy_set_header Host \$host;
-              proxy_set_header X-Real-IP \$remote_addr;
-          }
-      }
-runcmd:
-  - systemctl enable nginx
-  - systemctl restart nginx
-EOF
-)
+  custom_data = base64encode(file("${path.module}/cloud-init/vm1.yaml"))
 }
 
 # VM 2
@@ -106,20 +80,7 @@ resource "azurerm_linux_virtual_machine" "myLinuxVirtualMachine_2" {
     type = "SystemAssigned"
   }
 
-  custom_data = base64encode(<<EOF
-#cloud-config
-package_update: true
-packages:
-  - nginx
-write_files:
-  - path: /var/www/html/index.html
-    content: |
-      <html><body><h1>Hello depuis le backend !</h1></body></html>
-runcmd:
-  - systemctl enable nginx
-  - systemctl start nginx
-EOF
-)
+  custom_data = base64encode(file("${path.module}/cloud-init/vm2.yaml"))
 }
 
 data "azurerm_client_config" "current" {}

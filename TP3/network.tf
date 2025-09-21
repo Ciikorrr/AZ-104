@@ -1,3 +1,5 @@
+# Creation du Vnet
+
 resource "azurerm_virtual_network" "myVNet" {
   name                = "vm-vnet"
   address_space       = ["10.0.0.0/16"]
@@ -5,12 +7,16 @@ resource "azurerm_virtual_network" "myVNet" {
   resource_group_name = var.resource_group_name
 }
 
+# Création du subnet
+
 resource "azurerm_subnet" "mySubnet" {
   name                 = "vm-subnet"
   resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.myVNet.name
   address_prefixes     = ["10.0.1.0/24"]
 }
+
+# Création de l'interface reseau pour la VM exposée
 
 resource "azurerm_network_interface" "myNic_frontend" {
   name                = "vm-nic-1"
@@ -20,10 +26,13 @@ resource "azurerm_network_interface" "myNic_frontend" {
   ip_configuration {
     name                          = "internal"
     subnet_id                     = azurerm_subnet.mySubnet.id
-    private_ip_address_allocation = "Dynamic"
+    private_ip_address_allocation = "Static"
     public_ip_address_id          = azurerm_public_ip.myFront_Public_IP.id
+    private_ip_address            = "10.0.1.5"
   }
 }
+
+# Création de l'interface reseau pour la VM bastion
 
 resource "azurerm_network_interface" "myNic_backend" {
   name                = "vm-nic-2"
@@ -33,7 +42,8 @@ resource "azurerm_network_interface" "myNic_backend" {
   ip_configuration {
     name                          = "internal"
     subnet_id                     = azurerm_subnet.mySubnet.id
-    private_ip_address_allocation = "Dynamic"
+    private_ip_address_allocation = "Static"
+    private_ip_address            = "10.0.1.4"
   }
 }
 
@@ -45,11 +55,11 @@ resource "azurerm_network_security_group" "myVM_NSG" {
     location = azurerm_resource_group.myRessourceGroup.location
 }
 
-# Rule pour SSH depuis intenret vers frontend
+# Rule pour accès SSH vers frontend
 
 resource "azurerm_network_security_rule" "allow_ssh" {
   name                        = "Allow-SSH"
-  priority                    = 100
+  priority                    = 120
   direction                   = "Inbound"
   access                      = "Allow"
   protocol                    = "Tcp"
@@ -61,16 +71,48 @@ resource "azurerm_network_security_rule" "allow_ssh" {
   resource_group_name         = azurerm_resource_group.myRessourceGroup.name
 }
 
+# Rule pour avoir accès au netdata
+
+resource "azurerm_network_security_rule" "allow_netdata" {
+  name                        = "Allow-netdata"
+  priority                    = 1001
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "19999"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  network_security_group_name = azurerm_network_security_group.myVM_NSG.name
+  resource_group_name         = azurerm_resource_group.myRessourceGroup.name
+}
+
 # Rule pour HTTP internet vers frontend
 
 resource "azurerm_network_security_rule" "allow_http" {
   name                        = "Allow-HTTP"
-  priority                    = 110
+  priority                    = 100
   direction                   = "Inbound"
   access                      = "Allow"
   protocol                    = "Tcp"
   source_port_range           = "*"
   destination_port_range      = "80"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  network_security_group_name = azurerm_network_security_group.myVM_NSG.name
+  resource_group_name         = azurerm_resource_group.myRessourceGroup.name
+}
+
+# Rule pour HTTP internet vers frontend
+
+resource "azurerm_network_security_rule" "allow_https" {
+  name                        = "Allow-HTTPS"
+  priority                    = 110
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "443"
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
   network_security_group_name = azurerm_network_security_group.myVM_NSG.name
@@ -104,5 +146,5 @@ resource "azurerm_public_ip" "myFront_Public_IP" {
   resource_group_name = var.resource_group_name
   allocation_method   = "Static"
   sku                 = "Standard"
-  domain_name_label   = "ciikorrrdomain"
+  domain_name_label   = var.domaine_name
 }

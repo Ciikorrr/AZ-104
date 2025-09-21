@@ -1,0 +1,294 @@
+#cloud-config
+users:
+  - name: ciikorrr
+    group: wheel
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh-authorized-keys:
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIx77OCib7Hs85f2S8g1hT6KHB6HdB44X5g3lYvsuvbV M.M@fedora"
+
+package_update: true
+packages:
+  - nginx
+  - firewalld
+
+write_files:
+  - path: /etc/nginx/sites-available/default
+    content: |
+      upstream backend_netdata {
+          # the Netdata server
+          server 10.0.1.4:19999;
+          keepalive 1024;
+      }
+
+      upstream backend_page {
+          server 10.0.1.4:80;
+          keepalive 1024;
+      }
+
+      server {
+        listen 80;
+        server_name ciikorrrdomaine.uksouth.cloudapp.azure.com;
+
+        location / {
+          return 301 https://$host$request_uri;
+        }
+      }
+
+      server {
+          # nginx listens to this
+          listen 443 ssl http2;
+          # uncomment the line if you want nginx to listen on IPv6 address
+          #listen [::]:80;
+
+          # the virtual host name of this
+          server_name ciikorrrdomaine.uksouth.cloudapp.azure.com;
+
+          ssl_certificate         /etc/ssl/nginx/cert.pem;
+          ssl_certificate_key     /etc/ssl/nginx/key.pem;
+
+          location /netdata/ {
+              proxy_set_header X-Forwarded-Host $host;
+              proxy_set_header X-Forwarded-Server $host;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_pass http://backend_netdata/;
+              proxy_http_version 1.1;
+              proxy_pass_request_headers on;
+              proxy_set_header Connection "keep-alive";
+              proxy_store off;
+          }
+
+          location / {
+              proxy_set_header X-Forwarded-Host $host;
+              proxy_set_header X-Forwarded-Server $host;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_pass http://backend_page/;
+              proxy_http_version 1.1;
+              proxy_pass_request_headers on;
+              proxy_set_header Connection "keep-alive";
+              proxy_store off;
+          }
+      }
+
+  - path: /tmp/cert_script.sh
+    content: |
+      mkdir -p /etc/ssl/nginx
+      cp /var/lib/waagent/*.crt /etc/ssl/nginx/cert.pem
+      cp /var/lib/waagent/*.prv /etc/ssl/nginx/key.pem
+      systemctl restart nginx
+
+  - path: /etc/ssh/sshd_config
+    content: |
+      #       $OpenBSD: sshd_config,v 1.103 2018/04/09 20:41:22 tj Exp $
+
+      # This is the sshd server system-wide configuration file.  See
+      # sshd_config(5) for more information.
+
+      # This sshd was compiled with PATH=/usr/bin:/bin:/usr/sbin:/sbin
+
+      # The strategy used for options in the default sshd_config shipped with
+      # OpenSSH is to specify options with their default value where
+      # possible, but leave them commented.  Uncommented options override the
+      # default value.
+
+      Include /etc/ssh/sshd_config.d/*.conf
+
+      Port 22
+      #AddressFamily any
+      #ListenAddress 0.0.0.0
+      #ListenAddress ::
+
+      #HostKey /etc/ssh/ssh_host_rsa_key
+      #HostKey /etc/ssh/ssh_host_ecdsa_key
+      #HostKey /etc/ssh/ssh_host_ed25519_key
+
+      # Ciphers and keying
+      #RekeyLimit default none
+
+      # Logging
+      #SyslogFacility AUTH
+      #LogLevel INFO
+
+      # Authentication:
+
+      LoginGraceTime 30
+      PermitRootLogin no
+      #StrictModes yes
+      MaxAuthTries 3
+      #MaxSessions 10
+
+      PubkeyAuthentication yes
+
+      AllowUsers ciikorrr
+
+      # Expect .ssh/authorized_keys2 to be disregarded by default in future.
+      #AuthorizedKeysFile     .ssh/authorized_keys .ssh/authorized_keys2
+
+      #AuthorizedPrincipalsFile none
+
+      #AuthorizedKeysCommand none
+      #AuthorizedKeysCommandUser nobody
+
+      # For this to work you will also need host keys in /etc/ssh/ssh_known_hosts
+      #HostbasedAuthentication no
+      # Change to yes if you don't trust ~/.ssh/known_hosts for
+      # HostbasedAuthentication
+      #IgnoreUserKnownHosts no
+      # Don't read the user's ~/.rhosts and ~/.shosts files
+      #IgnoreRhosts yes
+
+      # To disable tunneled clear text passwords, change to no here!
+      PasswordAuthentication no
+      #PermitEmptyPasswords no
+
+      # Change to yes to enable challenge-response passwords (beware issues with
+      # some PAM modules and threads)
+      ChallengeResponseAuthentication no
+
+      # Kerberos options
+      #KerberosAuthentication no
+      #KerberosOrLocalPasswd yes
+      #KerberosTicketCleanup yes
+      #KerberosGetAFSToken no
+
+      # GSSAPI options
+      #GSSAPIAuthentication no
+      #GSSAPICleanupCredentials yes
+      #GSSAPIStrictAcceptorCheck yes
+      #GSSAPIKeyExchange no
+
+      # Set this to 'yes' to enable PAM authentication, account processing,
+      # and session processing. If this is enabled, PAM authentication will
+      # be allowed through the ChallengeResponseAuthentication and
+      # PasswordAuthentication.  Depending on your PAM configuration,
+      # PAM authentication via ChallengeResponseAuthentication may bypass
+      # the setting of "PermitRootLogin without-password".
+      # If you just want the PAM account and session checks to run without
+      # PAM authentication, then enable this but set PasswordAuthentication
+      # and ChallengeResponseAuthentication to 'no'.
+      UsePAM yes
+
+      AllowAgentForwarding yes
+      #AllowTcpForwarding yes
+      #GatewayPorts no
+      X11Forwarding no
+      #X11DisplayOffset 10
+      #X11UseLocalhost yes
+      #PermitTTY yes
+      PrintMotd no
+      #PrintLastLog yes
+      #TCPKeepAlive yes
+      #PermitUserEnvironment no
+      #Compression delayed
+      #ClientAliveInterval 0
+      #ClientAliveCountMax 3
+      #UseDNS no
+      #PidFile /var/run/sshd.pid
+      #MaxStartups 10:30:100
+      #PermitTunnel no
+      #ChrootDirectory none
+      #VersionAddendum none
+
+      # no default banner path
+      #Banner none
+
+      # Allow client to pass locale environment variables
+      AcceptEnv LANG LC_*
+
+      # override default of no subsystems
+      Subsystem       sftp    /usr/lib/openssh/sftp-server
+
+      # Example of overriding settings on a per-user basis
+      #Match User anoncvs
+      #       X11Forwarding no
+      #       AllowTcpForwarding no
+      #       PermitTTY no
+      #       ForceCommand cvs server
+
+  - path: /etc/pam.d/su
+    content: |
+      #
+      # The PAM configuration file for the Shadow `su' service
+      #
+
+      # This allows root to su without passwords (normal operation)
+      auth       sufficient pam_rootok.so
+
+      # Uncomment this to force users to be a member of group root
+      # before they can use `su'. You can also add "group=foo"
+      # to the end of this line if you want to use a group other
+      # than the default "root" (but this may have side effect of
+      # denying "root" user, unless she's a member of "foo" or explicitly
+      # permitted earlier by e.g. "sufficient pam_rootok.so").
+      # (Replaces the `SU_WHEEL_ONLY' option from login.defs)
+      auth       required   pam_wheel.so use_uid
+
+      # Uncomment this if you want wheel members to be able to
+      # su without a password.
+      # auth       sufficient pam_wheel.so trust
+
+      # Uncomment this if you want members of a specific group to not
+      # be allowed to use su at all.
+      # auth       required   pam_wheel.so deny group=nosu
+
+      # Uncomment and edit /etc/security/time.conf if you need to set
+      # time restrainst on su usage.
+      # (Replaces the `PORTTIME_CHECKS_ENAB' option from login.defs
+      # as well as /etc/porttime)
+      # account    requisite  pam_time.so
+
+      # This module parses environment configuration file(s)
+      # and also allows you to use an extended config
+      # file /etc/security/pam_env.conf.
+      # 
+      # parsing /etc/environment needs "readenv=1"
+      session       required   pam_env.so readenv=1
+      # locale variables are also kept into /etc/default/locale in etch
+      # reading this file *in addition to /etc/environment* does not hurt
+      session       required   pam_env.so readenv=1 envfile=/etc/default/locale
+
+      # Defines the MAIL environment variable
+      # However, userdel also needs MAIL_DIR and MAIL_FILE variables
+      # in /etc/login.defs to make sure that removing a user 
+      # also removes the user's mail spool file.
+      # See comments in /etc/login.defs
+      #
+      # "nopen" stands to avoid reporting new mail when su'ing to another user
+      session    optional   pam_mail.so nopen
+
+      # Sets up user limits according to /etc/security/limits.conf
+      # (Replaces the use of /etc/limits in old login)
+      session    required   pam_limits.so
+
+      # The standard Unix authentication modules, used with
+      # NIS (man nsswitch) as well as normal /etc/passwd and
+      # /etc/shadow entries.
+      @include common-auth
+      @include common-account
+      @include common-session
+
+  - path: /tmp/firewall_script.sh
+    content: |
+      #!/bin/bash
+      echo "# Create new zone"
+      sudo firewall-cmd --permanent --new-zone=local
+      echo "# Change interface to eth0"
+      sudo firewall-cmd --permanent --zone=local --change-interface=eth0
+      echo "# Add port 22/tcp"
+      sudo firewall-cmd --permanent --zone=local --add-port=22/tcp
+      echo "# Add port 80/tcp"
+      sudo firewall-cmd --permanent --zone=local --add-port=80/tcp
+      echo "# Add port 443/tcp"
+      sudo firewall-cmd --permanent --zone=local --add-port=443/tcp
+      echo "# Relaod"
+      sudo firewall-cmd --reload
+      echo "# Get Active Zone"
+      sudo firewall-cmd --get-active-zones
+      echo "# Get infos"
+      sudo firewall-cmd --list-all --zone=local
+
+runcmd:
+  - systemctl enable nginx
+  - systemctl restart nginx
+  - cd /tmp ; chmod 700 firewall_script.sh && sh firewall_script.sh
+  - cd /tmp; chmod 700 cert_script.sh && sh cert_script.sh
